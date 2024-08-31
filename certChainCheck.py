@@ -49,10 +49,31 @@ def x509_cert_chain_check(target_domain: str) -> bool:
         validity = False;                               # To store validity of cert_chain
         if(not cert_chain): return validity;            # Always False if no certificate received
 
+        for k in reversed(list(range(len(cert_chain)))):
+            
+            cert = cert_chain[k]; 
+            # print(f"\n\nCERT ({k}) -> IS_Expired? :", cert.has_expired(), "\n\n",); 
+            # for i in range(cert.get_extension_count()): print(i,cert.get_extension(i).get_short_name().decode(),cert.get_extension(i),"\n"); 
+            
+            if(cert.has_expired()):                     # If any certificate is expired, we return False
+                # print("\n [[[ LOC1 ]]] \n"); 
+                validity = False; return validity; 
 
-        # For each cert, check validity, and add it to the valid-cert-store object
+
+            # Add SAN Check (Subject Alternative Name , subjectAltName)
+            
+            # Add CN Check (Common Name)
 
 
+            # Create a contextStore for the website, and store all valid certificates to verify the chain connections
+            store_ctx = crypto.X509StoreContext(store,cert); 
+            try: store_ctx.verify_certificate(); store.add_cert(cert); 
+            except Exception as e: 
+                print("X509StoreContext Storing Exception as below:\n", e); 
+                validity = False; return validity; 
+
+
+        # print("\n [[[ LOC-Final ]]] \n"); 
         return validity; 
 
     except Exception as e: 
