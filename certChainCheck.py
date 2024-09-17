@@ -59,11 +59,25 @@ def x509_cert_chain_check(target_domain: str) -> bool:
                 # print("\n [[[ LOC1 ]]] \n"); 
                 validity = False; return validity; 
 
-
-            # Add SAN Check (Subject Alternative Name , subjectAltName)
+            # If SAN (Subject Alternative Name , subjectAltName) is valid, then so is certificate
+            for i in range(cert.get_extension_count()):
+                if(cert.get_extension(i).get_short_name()==b'subjectAltName'):
+                    for name in cert.get_extension(i).get_data().split(b'\x82')[1:]:
+                        if target_domain.encode('utf-8') in name.strip(): 
+                            # print("\n [[[ LOC5 ]]] \n"); 
+                            validity = True; break; 
             
-            # Add CN Check (Common Name)
+            if(validity): continue; # Go to next certificate to verify
 
+            # If CN (Common Name) is valid, then so is certificate
+            common_name = cert.get_subject().commonName; common_name_list = str(common_name).split("."); 
+            if(len(common_name_list)>1):
+                common_name_only = common_name_list[1]; 
+                # print("\n\n", common_name, target_domain, common_name_list, "\n\n"); 
+
+                if(target_domain.encode('utf-8') in common_name.encode('utf-8')): 
+                    # print("\n [[[ LOC8 ]]] \n"); 
+                    validity = True; continue; 
 
             # Create a contextStore for the website, and store all valid certificates to verify the chain connections
             store_ctx = crypto.X509StoreContext(store,cert); 
