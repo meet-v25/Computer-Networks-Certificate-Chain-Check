@@ -1,7 +1,3 @@
-# !/usr/bin/python3
-
-# python -m unittest tests/basic_tests.py   ######### FOR TESTING #########
-
 from OpenSSL import SSL,crypto
 import socket, certifi, pem, fnmatch, urllib, re
 
@@ -77,6 +73,10 @@ def x509_cert_chain_check(target_domain: str) -> bool:
 
                 if(target_domain.encode('utf-8') in common_name.encode('utf-8')): 
                     # print("\n [[[ LOC8 ]]] \n"); 
+                    validity = True; continue; 
+                
+                if(re.search(r"^(www\.)?" + common_name_only + r"\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$", target_domain)): 
+                    # print("\n [[[ LOC9 ]]] \n"); 
                     validity = True; continue; 
 
             # Create a contextStore for the website, and store all valid certificates to verify the chain connections
