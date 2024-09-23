@@ -2,7 +2,6 @@ from OpenSSL import SSL,crypto
 import socket, certifi, pem, fnmatch, urllib, re
 
 
-
 # Cert Paths
 TRUSTED_CERTS_PEM = certifi.where()
 
@@ -48,19 +47,14 @@ def x509_cert_chain_check(target_domain: str) -> bool:
         for k in reversed(list(range(len(cert_chain)))):
             
             cert = cert_chain[k]; 
-            # print(f"\n\nCERT ({k}) -> IS_Expired? :", cert.has_expired(), "\n\n",); 
-            # for i in range(cert.get_extension_count()): print(i,cert.get_extension(i).get_short_name().decode(),cert.get_extension(i),"\n"); 
-            
             if(cert.has_expired()):                     # If any certificate is expired, we return False
-                # print("\n [[[ LOC1 ]]] \n"); 
                 validity = False; return validity; 
 
             # If SAN (Subject Alternative Name , subjectAltName) is valid, then so is certificate
             for i in range(cert.get_extension_count()):
                 if(cert.get_extension(i).get_short_name()==b'subjectAltName'):
                     for name in cert.get_extension(i).get_data().split(b'\x82')[1:]:
-                        if target_domain.encode('utf-8') in name.strip(): 
-                            # print("\n [[[ LOC5 ]]] \n"); 
+                        if target_domain.encode('utf-8') in name.strip():
                             validity = True; break; 
             
             if(validity): continue; # Go to next certificate to verify
@@ -69,25 +63,19 @@ def x509_cert_chain_check(target_domain: str) -> bool:
             common_name = cert.get_subject().commonName; common_name_list = str(common_name).split("."); 
             if(len(common_name_list)>1):
                 common_name_only = common_name_list[1]; 
-                # print("\n\n", common_name, target_domain, common_name_list, "\n\n"); 
 
                 if(target_domain.encode('utf-8') in common_name.encode('utf-8')): 
-                    # print("\n [[[ LOC8 ]]] \n"); 
                     validity = True; continue; 
                 
-                if(re.search(r"^(www\.)?" + common_name_only + r"\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$", target_domain)): 
-                    # print("\n [[[ LOC9 ]]] \n"); 
+                if(re.search(r"^(www\.)?" + common_name_only + r"\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$", target_domain)):
                     validity = True; continue; 
 
-            # Create a contextStore for the website, and store all valid certificates to verify the chain connections
             store_ctx = crypto.X509StoreContext(store,cert); 
             try: store_ctx.verify_certificate(); store.add_cert(cert); 
             except Exception as e: 
                 print("X509StoreContext Storing Exception as below:\n", e); 
                 validity = False; return validity; 
 
-
-        # print("\n [[[ LOC-Final ]]] \n"); 
         return validity; 
 
     except Exception as e: 
@@ -96,11 +84,9 @@ def x509_cert_chain_check(target_domain: str) -> bool:
 
 
 
-if __name__ == "__main__":
+if(__name__=="__main__"):
     
     # Standalone running to help you test your program
     print("Certificate Validator...")
     target_domain = input("Enter TLS site to validate: ")
-    # item = 1
-    # target_domain = [0,"www.google.com","www.facebook.com","expired.badssl.com","wrong.host.badssl.com"][item]
     print("Certificate for {} verifed: {}".format(target_domain, x509_cert_chain_check(target_domain)))
